@@ -88,9 +88,9 @@ const start = async () => {
     syncInterval = setInterval( async () => {
        await fetchBookings();
        intervalCount++;
+       totalIntervalCount +=intervalCount;
        console.log(`Performed ${totalIntervalCount} total checks.`)
         if(intervalCount === 12) {
-            totalIntervalCount +=intervalCount;
             await notifySlack(
                 `Finder still running and no appointments have been found.
                 There have been ${totalIntervalCount} appointment checks since starting.`
