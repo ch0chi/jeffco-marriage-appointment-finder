@@ -107,7 +107,7 @@ const stop = () => {
 let intervalCount = 0;
 let totalIntervalCount = 0;
 
-await notifySlack("Started Marriage License Appointment Finder!");
+await notifySlack("Started Marriage License Appointment Finder!",true);
 await start()
     .catch(async (err) => {
         console.log(err);
