@@ -1,0 +1,10 @@
+version: "3"
+services:
+  marriage_appointment_finder:
+    container_name: marriage_appointment_finder
+    build:
+      context: .
+      dockerfile: Dockerfile
+    network_mode: "container:wireguard"
+    env_file: '.env'
+    command: "npm start"

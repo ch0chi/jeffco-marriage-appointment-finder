@@ -1,0 +1,7 @@
+*.bak
+.env
+node_modules/
+usr/
+.idea/
+tests/
+sampleData.txt
