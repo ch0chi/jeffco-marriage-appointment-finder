@@ -92,6 +92,7 @@ const start = () => {
                stop();
            });
        intervalCount++;
+       console.log(`Performed ${totalIntervalCount} total checks.`)
         if(intervalCount === 12) {
             totalIntervalCount +=intervalCount;
             //send update to slack
