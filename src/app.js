@@ -64,6 +64,7 @@ const fetchBookings = async () => {
         console.log('Queried appointlet api');
         let data = res.data;
         if(Array.isArray(data) && data.length) {
+            console.log(data);
             let message = "Marriage License Appointments Found!";
             await notifySlack(message,true);
         }
