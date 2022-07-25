@@ -81,6 +81,7 @@ const notifySlack = async (message,important = false) => {
 
 const start = () => {
     console.log("Starting...");
+    console.log(`Fetch Interval set to ${process.env.FETCH_INTERVAL}`);
     syncInterval = setInterval( async () => {
        await fetchBookings()
            .catch(async (err) =>{
