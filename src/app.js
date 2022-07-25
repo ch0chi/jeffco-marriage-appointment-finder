@@ -65,10 +65,29 @@ const fetchBookings = async () => {
         let data = res.data;
         if(Array.isArray(data) && data.length) {
             console.log(data);
-            let message = "Marriage License Appointments Found!";
-            await notifySlack(message,true);
+            for(const appointmentTime of data){
+                if(isAppointmentWithinRange(appointmentTime)){
+                    let message = `Marriage license appointment found for date: ${new Date(appointmentTime)}`;
+                    await notifySlack(message,true);
+                }
+            }
         }
     }
+}
+
+/**
+ * JeffCo's marriage license is only valid for 35 days after issuing. This checks if the found appointment
+ * date is within 35 days of the wedding date.
+ * @param appointmentDate
+ * @returns {boolean}
+ *  Returns true if appointment date within 35 days of wedding date, and false otherwise.
+ */
+const isAppointmentWithinRange = (appointmentDate) => {
+    let weddingDate = new Date(process.env.WEDDING_DATE);
+    appointmentDate = new Date(appointmentDate);
+    let diff = weddingDate.getTime() - appointmentDate;
+    let diffDays = Math.ceil(diff / (1000 * 3600 *24));
+    return diffDays <= 35;
 }
 
 const notifySlack = async (message,important = false) => {
@@ -93,7 +112,7 @@ const start = async () => {
        console.log(`Performed ${totalIntervalCount} total checks.`)
         if(intervalCount === 12) {
             await notifySlack(
-                `Finder still running and no appointments have been found.
+                `Finder still running and no appointments within 35 days have been found.
                 There have been ${totalIntervalCount} appointment checks since starting.`
             )
             intervalCount = 0;
@@ -108,7 +127,7 @@ const stop = () => {
 let intervalCount = 0;
 let totalIntervalCount = 0;
 
-await notifySlack("Started Marriage License Appointment Finder!",true);
+await notifySlack(`Started Marriage License Appointment Finder!`,true);
 await start()
     .catch(async (err) => {
         console.log(err);
