@@ -61,6 +61,7 @@ const fetchBookings = async () => {
     for(const bookableId of bookableIds) {
         let url = `https://api.appointlet.com/bookables/${bookableId}/available_times?service=290851`
         let res = await axios.get(url);
+        console.log('Queried appointlet api');
         let data = res.data;
         if(Array.isArray(data) && data.length) {
             let message = "Marriage License Appointments Found!";
@@ -79,24 +80,17 @@ const notifySlack = async (message,important = false) => {
     })
 }
 
-const start = () => {
+const start = async () => {
     console.log("Starting...");
     console.log(`Fetch Interval set to ${process.env.FETCH_INTERVAL}`);
+    await fetchBookings();
+
     syncInterval = setInterval( async () => {
-       await fetchBookings()
-           .catch(async (err) =>{
-               console.log(err);
-               await notifySlack(
-                   `Error fetching bookings!: ${err}`,
-                   true
-               )
-               stop();
-           });
+       await fetchBookings();
        intervalCount++;
        console.log(`Performed ${totalIntervalCount} total checks.`)
         if(intervalCount === 12) {
             totalIntervalCount +=intervalCount;
-            //send update to slack
             await notifySlack(
                 `Finder still running and no appointments have been found.
                 There have been ${totalIntervalCount} appointment checks since starting.`
@@ -104,8 +98,6 @@ const start = () => {
             intervalCount = 0;
         }
     },parseInt(process.env.FETCH_INTERVAL)*1000);
-
-
 }
 
 const stop = () => {
@@ -114,5 +106,14 @@ const stop = () => {
 
 let intervalCount = 0;
 let totalIntervalCount = 0;
+
 await notifySlack("Started Marriage License Appointment Finder!");
-start();
+await start()
+    .catch(async (err) => {
+        console.log(err);
+        await notifySlack(
+            `There was an error fetching bookings and the app has quit running. Error: ${err}`,
+            true
+        )
+        stop();
+    });
