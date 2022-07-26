@@ -9,6 +9,7 @@ let bookingUrls = [];
 let appEnv = process.env.APP_ENV;
 let slackWebhook = new IncomingWebhook(process.env.SLACK_WEBHOOK_URL);
 let syncInterval;
+let intervalTime = process.env.FETCH_INTERVAL;
 
 const setBookingUrls = (url) => {
     if(!bookingUrls.includes(url)){
@@ -19,6 +20,15 @@ const setBookingUrls = (url) => {
 const getBookingUrls = () => {
     return bookingUrls;
 }
+
+const setIntervalTime = (time) => {
+    intervalTime = time;
+}
+
+const getIntervalTime = () => {
+    return intervalTime;
+}
+
 
 const fetchBookingUrls = async () => {
     let data;
@@ -57,6 +67,7 @@ const fetchBookingUrls = async () => {
 const fetchBookings = async () => {
     let bookableIds = [98548,103175];
     let service = 290851 //marriage appointment id
+    let found = false;
 
     for(const bookableId of bookableIds) {
         let url = `https://api.appointlet.com/bookables/${bookableId}/available_times?service=290851`
@@ -67,11 +78,17 @@ const fetchBookings = async () => {
             console.log(data);
             for(const appointmentTime of data){
                 if(isAppointmentWithinRange(appointmentTime)){
+                    found = true;
                     let message = `Marriage license appointment found for date: ${new Date(appointmentTime)}`;
                     await notifySlack(message,true);
                 }
             }
         }
+    }
+    if(found) {
+        //appointments found. Let's update the fetch interval so we don't get spammed in slack.
+        setIntervalTime(3600);
+        console.log(`Fetch Interval now: ${getIntervalTime()}`);
     }
 }
 
@@ -102,7 +119,7 @@ const notifySlack = async (message,important = false) => {
 
 const start = async () => {
     console.log("Starting...");
-    console.log(`Fetch Interval set to ${process.env.FETCH_INTERVAL}`);
+    console.log(`Fetch Interval set to ${getIntervalTime()}`);
     await fetchBookings();
 
     syncInterval = setInterval( async () => {
@@ -117,7 +134,7 @@ const start = async () => {
             )
             intervalCount = 0;
         }
-    },parseInt(process.env.FETCH_INTERVAL)*1000);
+    },parseInt(getIntervalTime())*1000);
 }
 
 const stop = () => {
